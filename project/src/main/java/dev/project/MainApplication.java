@@ -7,24 +7,32 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import java.util.logging.Filter;
+import java.util.logging.LogRecord;
 
 import dev.project.service.Processor;
 
 
 public class MainApplication {
 	private static final String RESOURCES = "src/main/resources/";
+	private static final Logger logger = Logger.getLogger(MainApplication.class.getName());
 	
 	public static void main(String[] args) {
-		
-		final Path path = Paths.get(RESOURCES + "list.txt");
+		logger.setFilter(new CustomFilter());
+		final Path path = Paths.get(RESOURCES + "blank-list.txt"); //빈 파일을 읽었을 때
+		logger.config("경로 출력 : " + path);
 		Scanner sc = new Scanner(System.in);
 		
 		try {
 			
 			List<String> lines = Files.readAllLines(path);
+			logger.info("lines 확인용 출력 : " + lines);
 			
 			if (lines.isEmpty()) {
-				System.out.println("정보가 없습니다.");
+				logger.log(Level.SEVERE, "정보가 비어있습니다.");
 				return;
 			}
 			
@@ -32,11 +40,11 @@ public class MainApplication {
 			
 			for (String line : lines) {
 				String[] columns = line.split(" ");
+				logger.info("columns 확인용 출력 : " + columns);
 				
 				UserInformation user = new UserInformation(columns[0], columns[1], columns[2], columns[3]);
 				userList.add(user);
 			}
-			
 			
 			Processor Pro = new Processor();
 			String userInput = ""; 
@@ -58,9 +66,15 @@ public class MainApplication {
 				
 			}			
 		} catch (IOException e) {
-			System.out.println("파일을 찾지 못했습니다.");
+			logger.log(Level.SEVERE, "파일을 찾지 못했습니다.");
 			
 		} finally { sc.close(); }
 		
+	}
+
+	public static class CustomFilter implements Filter {
+		public boolean isLoggable(LogRecord logRecord) {
+			return logRecord.getLevel().getName().equals("SEVERE");
+		}
 	}
 }
